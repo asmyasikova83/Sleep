@@ -66,7 +66,7 @@ for idx in range(1, 155):
     report = classification_report(doctor_hypno_scoring, hypno_pred, output_dict=False)
     print(report)
 
-    # Genereral YASA annotations
+    # Generate YASA annotations
     yasa_metrics_path = os.path.join(folder_metrics_path, "{}_metrics_report_yasa.txt".format(subject))
     yasa_annotations_path = os.path.join(folder_metrics_path, "{}_annotations_yasa.csv".format(subject))
     with open(yasa_annotations_path, 'w', newline='', encoding='utf-8') as f:
