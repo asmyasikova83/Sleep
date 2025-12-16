@@ -79,14 +79,26 @@ for idx in range(1, 155):
     df.loc[len(df)] = averaged_row
     print(df)
 
-# Compute total means by columns, round, add
-means = df.iloc[:, 1:].astype(float).mean()
-cols_to_round_0 = df.columns[1:4]
-df[cols_to_round_0] = df[cols_to_round_0].astype(float).round(0)
+# Means for the table
+#TP, FP, FN, TN
+cols_to_round_0 = df.columns[1:5]
+# "Чувствительность Se (R)", "Специфичность P(PPV)",
+# "Доля ложных распознаваний FPR", "Точность: Matches Yasa & Doctor/Total"
 cols_to_round_2 = df.columns[5:]
+
+df[cols_to_round_0] = df[cols_to_round_0].astype(float).round(0)
 df[cols_to_round_2] = df[cols_to_round_2].astype(float).round(2)
 
-mean_result = ['Среднее'] + list(means)
+means = df[cols_to_round_0].mean().round(0).astype(int)
+means2 = df[cols_to_round_2].mean().round(2)
+
+#Mean
+mean_result = ['Среднее']
+mean_result += list(means)
+mean_result += list(means2)
+
+print(mean_result)
+# Добавляем строку в DataFrame
 df.loc[len(df)] = mean_result
 
 # Save in Excel
