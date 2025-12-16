@@ -14,14 +14,12 @@ def create_sleep_statistics_pdf(subject, stat, output_folder):
     Создает PDF файл со статистикой сна для субъекта
     """
 
-    # Создаем PDF объект
+    # Create PDF object
     pdf = FPDF(orientation='L')
     pdf.add_page()
 
     def format_duration(value):
-        """
-        Форматирует длительность в минутах с округлением минут
-        """
+        #Format time: hours and minutes
         try:
             minutes = float(value)
             hours = int(minutes // 60)
@@ -31,7 +29,7 @@ def create_sleep_statistics_pdf(subject, stat, output_folder):
             return str(value)
 
 
-    # Добавляем шрифт DejaVu Sans с поддержкой кириллицы
+    # Add DejaVu Sans for cyrillic
     font_path = r'C:\Users\msasha\PycharmProjects\Sleep\dejavu-sans-ttf-2.37\ttf\DejaVuSans.ttf'
 
     # Register only the regular style of the DejaVu font
@@ -54,7 +52,6 @@ def create_sleep_statistics_pdf(subject, stat, output_folder):
     pdf.set_font("DejaVu", '', 11)  # Используем DejaVu для данных (обычный стиль)
 
     # Data
-
     if stat:
         for key, value in stat.items():
             pdf.multi_cell(200, 10, key, border=1, new_x=XPos.RIGHT, new_y=YPos.TOP, align='L')
