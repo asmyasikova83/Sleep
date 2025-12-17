@@ -9,11 +9,32 @@ import json
 import warnings
 warnings.filterwarnings("ignore")
 
-def create_sleep_statistics_pdf(subject, stat, output_folder):
-    """
-    Создает PDF файл со статистикой сна для субъекта
-    """
+#Dict for sleep stat notations
+descriptions = {
+    "TIB": "Время в кровати",
+    "SPT": "Время с первого до последнего цикла сна",
+    "WASO": "Общая продолжительность бодрствования после засыпания",
+    "TST": "Общая продолжительность сна (N1 + N2 + N3 + REM)",
+    "N1": "Фаза сна N1",
+    "N2": "Фаза сна N2",
+    "N3": "Фаза сна N3",
+    "REM": "Фаза сна REM: быстрое движение глаз",
+    "NREM": "Фазы сна без REM: NREM = N1 + N2 + N3",
+    "SOL": "Время от начала процесса засыпания до первой стадии сна",
+    "Lat_N1": "Время/Латентность от начала записи до начала стадии сна N1",
+    "Lat_N2": "Время/Латентность от начала записи до начала стадии сна N2",
+    "Lat_N3": "Время/Латентность от начала записи до начала стадии сна N3",
+    "Lat_REM": "Время/Латентность от начала записи до начала стадии сна REM",
+    "%N1": "Общая продолжительность сна N1 (в %) от общей продолжительности сна",
+    "%N2": "Общая продолжительность сна N2 (в %) от общей продолжительности сна",
+    "%N3": "Общая продолжительность сна N3 (в %) от общей продолжительности сна",
+    "%REM": "Общая продолжительность сна REM (в %) от общей продолжительности сна",
+    "%NREM": "Общая продолжительность сна NREM = N1 + N2 + N3 (в %) от общей продолжительности сна",
+    "SE": "Эффективность сна = Общая продолжительность сна / Время в кровати * 100 (%)",
+    "SME": "Эффективность поддержания сна = Общая продолжительность сна / Время с первого до последнего цикла сна * 100 (%)"
+}
 
+def create_sleep_statistics_pdf(subject, stat, output_folder):
     # Create PDF object
     pdf = FPDF(orientation='L')
     pdf.add_page()
@@ -64,7 +85,7 @@ def create_sleep_statistics_pdf(subject, stat, output_folder):
             pdf.multi_cell(70, 10, display_value, border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
 
     #Image
-    pdf.ln(20)  # Blankspace
+    pdf.ln(20)
     pdf.image(image_path, x=10, y=None, w=250) # image_path, x=left, y=top, w=width. None means that aspect ratio is kept.
 
     # Save PDF
@@ -78,7 +99,7 @@ def create_sleep_statistics_pdf(subject, stat, output_folder):
 folder_statistics_path = r"C:\Users\msasha\PycharmProjects\Sleep\sleep_statistics"
 output_folder = r"C:\Users\msasha\PycharmProjects\Sleep\PDF"
 
-subject = input("Введите имя испытуемого (от SN001 до SN154) + enter или 'exit', чтобы выйти: ").strip()
+subject = input("Введите имя испытуемого (от SN001 до SN154) + Enter или 'exit', чтобы выйти: ").strip()
 
 if subject.lower() == 'exit':
     print("Вы вышли из процесса.")
@@ -92,29 +113,6 @@ fname_stat = folder_statistics_path + "\{}_sleep_statistics.json".format(subject
 try:
     with open(fname_stat, 'r', encoding='utf-8') as f:
         stat = json.load(f)
-        descriptions = {
-            "TIB": "Время в кровати",
-            "SPT": "Время с первого до последнего цикла сна",
-            "WASO": "Общая продолжительность бодрствования после засыпания",
-            "TST": "Общая продолжительность сна (N1 + N2 + N3 + REM)",
-            "N1": "Фаза сна N1",
-            "N2": "Фаза сна N2",
-            "N3": "Фаза сна N3",
-            "REM": "Фаза сна REM: быстрое движение глаз",
-            "NREM": "Фазы сна без REM: NREM = N1 + N2 + N3",
-            "SOL": "Время от начала процесса засыпания до первой стадии сна",
-            "Lat_N1": "Время/Латентность от начала записи до начала стадии сна N1",
-            "Lat_N2": "Время/Латентность от начала записи до начала стадии сна N2",
-            "Lat_N3": "Время/Латентность от начала записи до начала стадии сна N3",
-            "Lat_REM": "Время/Латентность от начала записи до начала стадии сна REM",
-            "%N1": "Общая продолжительность сна N1 (в %) от общей продолжительности сна",
-            "%N2": "Общая продолжительность сна N2 (в %) от общей продолжительности сна",
-            "%N3": "Общая продолжительность сна N3 (в %) от общей продолжительности сна",
-            "%REM": "Общая продолжительность сна REM (в %) от общей продолжительности сна",
-            "%NREM": "Общая продолжительность сна NREM = N1 + N2 + N3 (в %) от общей продолжительности сна",
-            "SE": "Эффективность сна = Общая продолжительность сна / Время в кровати * 100 (%)",
-            "SME": "Эффективность поддержания сна = Общая продолжительность сна / Время с первого до последнего цикла сна * 100 (%)"
-        }
 
         # Replace the key
         stat_rus = {}
@@ -125,6 +123,6 @@ try:
         create_sleep_statistics_pdf(subject, stat_rus, output_folder)
 except FileNotFoundError:
     print(f"Файл {fname_stat} не найден")
-    stat = {}  # или другое значение по умолчанию
+    stat = {}
 
 
