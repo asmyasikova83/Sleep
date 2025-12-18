@@ -28,7 +28,7 @@ def preprocessing(fname_edf):
 
     return raw, chan, sf
 
-def prepare_data_for_hypnogram(fname_txt, subject):
+def prepare_data_for_hypnogram(fname_txt, folder_metrics_path, subject):
     hypno = pd.read_csv(fname_txt).squeeze()
 
     # 0 = Wake, 1 = N1 sleep, 2 = N2 sleep, 3 = N3 sleep and 4 = REM sleep
@@ -55,7 +55,8 @@ def prepare_data_for_hypnogram(fname_txt, subject):
     #hypno_filtered.name = 'Annotation'
     # Save the modified DataFrame to a new CSV file
     hypno_filtered.name = 'Annotation'
-    hypno_filtered.to_csv("yasa_annotations_metrics/{}_annotations_doctor.csv".format(subject), index=False)
+    fname = folder_metrics_path +  "/{}_annotations_doctor.csv".format(subject)
+    hypno_filtered.to_csv(fname, index=False)
 
     return hypno_filtered
 

@@ -41,7 +41,7 @@ for idx in range(1, 155):
     #Mapping
     # 0 = Wake, 1 = N1 sleep, 2 = N2 sleep, 3 = N3 sleep and 4 = REM sleep
     fname_txt = folder_data + "\{}_sleepscoring.txt".format(subject)
-    doctor_hypno_scoring = prepare_data_for_hypnogram(fname_txt, subject)
+    doctor_hypno_scoring = prepare_data_for_hypnogram(fname_txt, folder_metrics_path, subject)
 
     #Hypnogram
     fname_pics = folder_pics_path + "\hypnogram_{}_doctor.png".format(subject)

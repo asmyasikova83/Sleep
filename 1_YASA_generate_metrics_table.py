@@ -27,7 +27,7 @@ columns = ["ID записи", "TP", "FP", "FN", "TN" , "Чувствительн
            "Доля ложных распознаваний FPR", "Точность: Matches Yasa & Doctor/Total"]
 df = pd.DataFrame(columns=columns)
 
-for idx in range(1, 155):
+for idx in range(1, 2):
     if idx < 10:
         subject = "SN00{}".format(idx)
     elif idx > 9 and idx < 100:
@@ -47,8 +47,7 @@ for idx in range(1, 155):
     #Mapping
     # 0 = Wake, 1 = N1 sleep, 2 = N2 sleep, 3 = N3 sleep and 4 = REM sleep
     fname_txt = folder_data + "\{}_sleepscoring.txt".format(subject)
-    doctor_hypno_scoring = prepare_data_for_hypnogram(fname_txt, subject)
-
+    doctor_hypno_scoring = prepare_data_for_hypnogram(fname_txt, folder_metrics_path, subject)
     #Automatic sleep staging with YASA
     fname_pics = folder_pics_path + "\hypnogram_{}_yasa.png".format(subject)
     hypno_predicted = yasa_staging(fname_pics, raw)
@@ -102,5 +101,5 @@ print(mean_result)
 df.loc[len(df)] = mean_result
 
 # Save in Excel
-yasa_metrics_path = os.path.join(folder_metrics_path, "Total_metrics_report_yasa.xlsx")
+yasa_metrics_path = os.path.join(folder_metrics_path, "Total_metrics_report_yasa_test.xlsx")
 df.to_excel(yasa_metrics_path, index=False)
