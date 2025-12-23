@@ -5,6 +5,7 @@ import mne
 import yasa
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
+import random
 
 def read_annotations(file_path, file_type):
     if file_type == 'txt':
@@ -27,6 +28,52 @@ def preprocessing(fname_edf):
     raw.filter(0.3, 45)
 
     return raw, chan, sf
+
+def generate_random_annotations(fname_txt, folder_metrics_path, subject):
+    hypno = pd.read_csv(fname_txt).squeeze()
+    # 0 = Wake, 1 = N1 sleep, 2 = N2 sleep, 3 = N3 sleep and 4 = REM sleep
+    sleep_stage_mapping = {
+        'W': '0',
+        'N1': '1',
+        'N2': '2',
+        'N3': '3',
+        'R': '4'
+    }
+
+
+    # Extract the sleep stages (keys)
+    stages = list(sleep_stage_mapping.keys())
+
+    # Shuffle the stages to randomize the order
+    random.shuffle(stages)
+
+    # Create a new mapping with the shuffled stages
+    randomized_mapping = {stage: str(i) for i, stage in enumerate(stages)}
+
+    # Print the randomized mapping
+    print(randomized_mapping)
+
+
+    # Modify the file with staging info
+    # Get the second-to-last column name with Annotations
+    second_last_col = hypno.columns[-2]
+    # Remove 'Sleep stage ' prefix if it exists in the values
+    hypno_clean = hypno[second_last_col].astype(str).str.replace('Sleep stage ', '', regex=False)
+    # Remove whitespace
+    hypno_clean = hypno_clean.str.strip()
+    # Map the values using the dictionary
+    hypno_modified = hypno_clean.map(lambda x: randomized_mapping.get(x, x))
+    #Filter out not stages
+    mask = ~hypno_modified.isin(['Lights off', 'Lights on'])
+    hypno_filtered = hypno_modified[mask]
+    #hypno_filtered.name = 'Annotation'
+    # Save the modified DataFrame to a new CSV file
+    hypno_filtered.name = 'Annotation'
+    fname = folder_metrics_path +  "/{}_annotations_doctor.csv".format(subject)
+    hypno_filtered.to_csv(fname, index=False)
+
+
+    return hypno_filtered
 
 def prepare_data_for_hypnogram(fname_txt, folder_metrics_path, subject):
     hypno = pd.read_csv(fname_txt).squeeze()
@@ -103,6 +150,22 @@ def average_recall(results_dict):
     else:
         print("Нет данных по классам.")
         return 0
+
+def average_sensitivity(doctor_hypno_scoring, hypno_pred):
+    #Recall = Sensitivity: Recall = True Positives / (True Positives + False Negatives)
+    cm = confusion_matrix(doctor_hypno_scoring, hypno_pred)
+    # Multi-class
+    total = np.sum(cm)
+    sensitivities = []
+    for i in range(cm.shape[0]):
+        TP = cm[i, i]
+        FP = np.sum(cm[i, :]) - TP
+        FN = np.sum(cm[:, i]) - TP
+        TN = total - (TP + FP + FN)
+        sens = TP / (TP + FN) if (TP + FN) > 0 else 0
+        sensitivities.append(sens)
+
+    return np.round(np.mean(sensitivities), 2)
 
 def average_PPV(doctor_hypno_scoring, hypno_pred):
     #Precision/Positive Predictive Value (PPV) = TP/(TP + FP)
