@@ -20,7 +20,7 @@ def preprocessing(fname_edf):
     raw = mne.io.read_raw_edf(fname_edf, preload=True)
 
     #Selecting channels
-    raw.drop_channels(["EMG chin", "EOG E1-M2", "EOG E2-M2", "ECG"])
+    #raw.drop_channels(["EMG chin", "EOG E1-M2", "EOG E2-M2", "ECG"])
     chan = raw.ch_names
 
     raw.resample(100)
@@ -125,7 +125,9 @@ def plot_spectrogram(fname_pics, chan, sf, hypno_filtered, raw):
     plt.close(fig)
 
 def yasa_staging(fname_pics, raw):
-    sls = yasa.SleepStaging(raw, eeg_name="EEG C4-M1")
+    #sls = yasa.SleepStaging(raw, eeg_name="EEG C4-M1")
+    #better results with EOG and submental EMG
+    sls = yasa.SleepStaging(raw, eeg_name="EEG C4-M1", eog_name="EOG E2-M2", emg_name="EMG chin")
     hypno_pred = sls.predict()  # Predict the sleep stages
     hypno_pred = yasa.hypno_str_to_int(hypno_pred)  # Convert "W" to 0, "N1" to 1, etc
     ax = yasa.plot_hypnogram(hypno_pred)  # Plot

@@ -17,9 +17,13 @@ from functions import (preprocessing, generate_random_annotations,
                       average_false_positive_rate, compare_annotations)
 import openpyxl
 
-folder_data = "/home/daniil/sleep/Sleep/data"
-folder_pics_path = "/home/daniil/sleep/Sleep/pics"
-folder_metrics_path = "/home/daniil/sleep/Sleep/random_yasa_annotations_metrics"
+#folder_data = "/home/daniil/sleep/Sleep/data"
+#folder_pics_path = "/home/daniil/sleep/Sleep/pics"
+#folder_metrics_path = "/home/daniil/sleep/Sleep/random_yasa_annotations_metrics"
+
+folder_data =  r'C:\Users\msasha\PycharmProjects\Sleep\data\haaglanden-medisch-centrum-sleep-staging-database-1.1\recordings'
+folder_pics_path = r"C:\Users\msasha\PycharmProjects\Sleep\random_haagladen_pics"
+folder_metrics_path = r"C:\Users\msasha\PycharmProjects\Sleep\random_haagladen_yasa_annotations_metrics"
 
 os.makedirs(folder_pics_path, exist_ok=True)
 os.makedirs(folder_metrics_path, exist_ok=True)
@@ -28,7 +32,7 @@ columns = ["ID записи", "TP", "FP", "FN", "TN" , "Чувствительн
            "Доля ложных распознаваний FPR", "Точность: Matches Yasa & Doctor/Total"]
 df = pd.DataFrame(columns=columns)
 
-for idx in range(1, 4):
+for idx in range(1, 155):
     if idx < 10:
         subject = "SN00{}".format(idx)
     elif idx > 9 and idx < 100:
@@ -103,5 +107,5 @@ print(mean_result)
 df.loc[len(df)] = mean_result
 
 # Save in Excel
-yasa_metrics_path = os.path.join(folder_metrics_path, "Total_metrics_report_yasa_random.xlsx")
+yasa_metrics_path = os.path.join(folder_metrics_path, "Total_metrics_report_yasa_random_hagladen.xlsx")
 df.to_excel(yasa_metrics_path, index=False)

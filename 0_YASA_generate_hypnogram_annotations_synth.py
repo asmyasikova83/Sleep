@@ -15,15 +15,19 @@ from functions import (preprocessing, generate_random_annotations,
                        yasa_staging, compare_annotations)
 import yasa
 
-folder_data =  "/home/daniil/sleep/Sleep/data"
-folder_pics_path = "/home/daniil/sleep/Sleep/pics"
-folder_metrics_path = "/home/daniil/sleep/Sleep/random_yasa_annotations_metrics"
+#folder_data =  "/home/daniil/sleep/Sleep/data"
+#folder_pics_path = "/home/daniil/sleep/Sleep/pics"
+#folder_metrics_path = "/home/daniil/sleep/Sleep/random_yasa_annotations_metrics"
+
+folder_data =  r'C:\Users\msasha\PycharmProjects\Sleep\data\haaglanden-medisch-centrum-sleep-staging-database-1.1\recordings'
+folder_pics_path = r"C:\Users\msasha\PycharmProjects\Sleep\random_haagladen_pics"
+folder_metrics_path = r"C:\Users\msasha\PycharmProjects\Sleep\random_haagladen_yasa_annotations_metrics"
 
 os.makedirs(folder_pics_path, exist_ok=True)
 os.makedirs(folder_metrics_path, exist_ok=True)
 
 compare_annot_list = []
-for idx in range(1, 4):
+for idx in range(1, 155):
     if idx < 10:
         subject = "SN00{}".format(idx)
     elif idx > 9 and idx < 100:

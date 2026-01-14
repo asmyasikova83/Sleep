@@ -27,7 +27,7 @@ columns = ["ID записи", "TP", "FP", "FN", "TN" , "Чувствительн
            "Доля ложных распознаваний FPR", "Точность: Matches Yasa & Doctor/Total"]
 df = pd.DataFrame(columns=columns)
 
-for idx in range(1, 2):
+for idx in range(1, 155):
     if idx < 10:
         subject = "SN00{}".format(idx)
     elif idx > 9 and idx < 100:
