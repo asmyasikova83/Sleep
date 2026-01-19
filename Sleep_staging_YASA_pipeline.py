@@ -45,7 +45,7 @@ logger.info(f"[INFO] Обработка испытуемого: {subject}")
 
 # 2. Paths
 folder_data = Path(
-    r"C:\Users\msasha\PycharmProjects\Sleep\data\haaglanden-medisch-centrum-sleep-staging-database-1.1\recordings")
+    r"C:\Users\msasha\PycharmProjects\Sleep_16Jan2026\data\haaglanden-medisch-centrum-sleep-staging-database-1.1\recordings")
 folder_pics_path = Path(r"C:\Users\msasha\PycharmProjects\Sleep\pics\pipeline")
 folder_metrics_path = Path(r"C:\Users\msasha\PycharmProjects\Sleep\yasa_annotations_metrics")
 folder_statistics_path = Path(r"C:\Users\msasha\PycharmProjects\Sleep\sleep_statistics")
@@ -97,5 +97,7 @@ with open(fname_stat, 'w', encoding='utf-8') as f:
 logger.info(f"[OK] Статистика сохранена: {fname_stat}")
 
 # 8. Build a report in PDF‑
-create_sleep_statistics_pdf(subject, stat, folder_PDF, spectro_pics)
+# Add DejaVu Sans for cyrillic
+font_path = r'C:\Users\msasha\PycharmProjects\Sleep\dejavu-sans-ttf-2.37\ttf\DejaVuSans.ttf'
+create_sleep_statistics_pdf(subject, stat, folder_PDF, spectro_pics, font_path)
 logger.info(f"[OK] PDF‑отчёт создан: {folder_PDF / subject}_report.pdf")
