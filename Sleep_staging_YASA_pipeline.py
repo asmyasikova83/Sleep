@@ -44,6 +44,7 @@ if not subject:
 logger.info(f"[INFO] Обработка испытуемого: {subject}")
 
 # 2. Paths
+# data are stored in \\MCSSERVER\DB Temp\physionet.org\files\haaglanden-medisch-centrum-sleep-staging-database-1.1\recordings
 folder_data = Path(
     r"C:\Users\msasha\PycharmProjects\Sleep_16Jan2026\data\haaglanden-medisch-centrum-sleep-staging-database-1.1\recordings")
 folder_pics_path = Path(r"C:\Users\msasha\PycharmProjects\Sleep\pics\pipeline")
