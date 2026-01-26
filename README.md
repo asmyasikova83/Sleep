@@ -26,8 +26,11 @@ ___________________________________________________________
 Launching the project
 
 create and activate virtual environment:
+
 python - m venv .venv1
+
 .venv1\Scripts\Activate.ps1
 
 install the dependencies
+
 python -m pip install -r requirements.txt
