@@ -4,7 +4,7 @@ import time
 import mne
 import yasa
 import matplotlib.pyplot as plt
-from fpdf import FPDF, XPos, YPos
+from fpdf import FPDF
 import logging
 
 def set_logger():
@@ -103,7 +103,7 @@ def yasa_staging(fname_pics, raw):
 
     return hypno_pred
 
-def create_sleep_statistics_pdf(subject, stat, output_folder, image_path):
+def create_sleep_statistics_pdf(subject, stat, output_folder, image_path, font_path):
     # Builds a PDF file with sleep statistics and hypnogram/spectrogram
 
     descriptions = {
@@ -121,13 +121,13 @@ def create_sleep_statistics_pdf(subject, stat, output_folder, image_path):
         "Lat_N2": "Время/Латентность от начала записи до начала стадии сна N2",
         "Lat_N3": "Время/Латентность от начала записи до начала стадии сна N3",
         "Lat_REM": "Время/Латентность от начала записи до начала стадии сна REM",
-        "%N1": "Общая продолжительность сна N1 (в %) от общей продолжительности сна",
-        "%N2": "Общая продолжительность сна N2 (в %) от общей продолжительности сна",
-        "%N3": "Общая продолжительность сна N3 (в %) от общей продолжительности сна",
-        "%REM": "Общая продолжительность сна REM (в %) от общей продолжительности сна",
-        "%NREM": "Общая продолжительность сна NREM = N1 + N2 + N3 (в %) от общей продолжительности сна",
-        "SE": "Эффективность сна = Общая продолжительность сна / Время в кровати * 100 (%)",
-        "SME": "Эффективность поддержания сна = Общая продолжительность сна / Время с первого до последнего цикла сна * 100 (%)"
+        "%N1": "Общ. продолжительность сна N1 (в %) от общ. продолж-сти сна",
+        "%N2": "Общ. продолжительность сна N2 (в %) от общ. продолж-сти сна",
+        "%N3": "Общ. продолжительность сна N3 (в %) от общ. продолж-сти сна",
+        "%REM": "Общ. продолжительность сна REM (в %) от общ. продолж-ости сна",
+        "%NREM": "Общ. продолжительность сна NREM = N1 + N2 + N3 (в %) от общ. продолж-сти сна",
+        "SE": "Эффект-сть сна = Общ. продолж-сть сна / Время в кровати * 100(%)",
+        "SME": "Эффект-сть поддерж-я сна = Общ. продолж-сть сна / Время перв.- послед. цикла сна * 100(%)"
     }
 
     def format_duration(value):
@@ -150,41 +150,48 @@ def create_sleep_statistics_pdf(subject, stat, output_folder, image_path):
     pdf = FPDF(orientation='L')
     pdf.add_page()
 
-    # Add DejaVu Sans for cyrillic
-    font_path = r'C:\Users\msasha\PycharmProjects\Sleep\dejavu-sans-ttf-2.37\ttf\DejaVuSans.ttf'
 
     # Register only the regular style of the DejaVu font
-    pdf.add_font('DejaVu', '', font_path)
+    #pdf.add_font('DejaVu', '', font_path)
+    #pdf.set_font("DejaVu", size=12)
+    #pdf = FPDF()
+    pdf.add_font("DejaVu", "", font_path, uni=True)
     pdf.set_font("DejaVu", size=12)
 
     # Title
-    pdf.cell(200, 10, text=f"Статистика сна для {subject}", new_x=XPos.LMARGIN, new_y=YPos.NEXT, align="C")
+    pdf.cell(200, 10, txt=f"Статистика сна", align="C", ln=False)
 
     # Subject info
-    pdf.cell(200, 10, text=f"Испытуемый: {subject}", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+    pdf.cell(w=200, h=10, txt=f"Испытуемый: {subject}", align="L", ln=True)
 
     # Table
     pdf.set_fill_color(200, 220, 255)
     pdf.set_font("DejaVu", '', 12)  # Используем DejaVu для заголовков (обычный стиль)
 
-    pdf.cell(200, 10, "Параметр", border=1, new_x=XPos.RIGHT, new_y=YPos.TOP, align='C', fill=True)
-    pdf.cell(70, 10, "Значение", border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C', fill=True)
+    pdf.cell(w=200, h=10, txt="Параметр", border=1, align="C", fill=True, ln=False)
+    pdf.cell(w=70, h=10, txt="Значение", border=1, align="L", fill=True, ln=True)
 
     pdf.set_font("DejaVu", '', 11)  # Используем DejaVu для данных (обычный стиль)
 
     # Data
+
     if stat_rus:
         for key, value in stat_rus.items():
-            pdf.multi_cell(200, 10, key, border=1, new_x=XPos.RIGHT, new_y=YPos.TOP, align='L')
+            # 1. Выводим ключ слева (ширина 130 мм)
+            pdf.cell(w=200, h=10, txt=key, border=1, align="L", ln=False)
 
+            # 2. Форматируем значение
             if '%' in key:
-                display_value = f"{int(float(value))}%"  # выводим значение без форматирования
+                display_value = f"{int(float(value))}%"
             else:
-                display_value = format_duration(value)  # применяем форматирование
+                display_value = format_duration(value)
 
-            pdf.multi_cell(70, 10, display_value, border=1, new_x=XPos.LMARGIN, new_y=YPos.NEXT, align='C')
+            # 3. Устанавливаем X для значения (справа от ключа)
+            pdf.set_x(210)  # X = 130 мм (начало второй колонки)
 
-    #Image
+            # 4. Выводим значение справа (ширина 70 мм)
+            pdf.cell(w=70, h=10, txt=display_value, border=1, align="R", ln=True)
+
     pdf.ln(20)
     pdf.image(image_path, x=10, y=None, w=250) # image_path, x=left, y=top, w=width. None means that aspect ratio is kept.
 
