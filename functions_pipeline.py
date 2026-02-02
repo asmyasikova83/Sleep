@@ -193,7 +193,7 @@ def create_sleep_statistics_pdf(subject, stat, output_folder, image_path, font_p
             pdf.cell(w=70, h=10, txt=display_value, border=1, align="R", ln=True)
 
     pdf.ln(20)
-    pdf.image(image_path, x=10, y=None, w=250) # image_path, x=left, y=top, w=width. None means that aspect ratio is kept.
+    pdf.image(str(image_path), x=10, y=None, w=250) # image_path, x=left, y=top, w=width. None means that aspect ratio is kept.
 
     # Save PDF
     filename = os.path.join(output_folder, f"{subject}_sleep_statistics.pdf")
