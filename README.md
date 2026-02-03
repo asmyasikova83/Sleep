@@ -7,7 +7,7 @@ the and data from Haaglanden Medisch Centrum sleep staging database (https://doi
 the code performs automatic sleep staging identification
 
 
-#Sleep Application
+## Sleep Application
 
 Sleep_App.py:
 
@@ -45,7 +45,7 @@ Sleep_staging_YASA_pipeline.py:
 functions_pipeline.py - import to add the necessary funcs
 
 ___________________________________________________________
-#Launching the project
+## Launching the project
 
 
             1. create and activate virtual environment: python - m venv .venv1
