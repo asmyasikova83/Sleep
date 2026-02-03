@@ -7,13 +7,15 @@ the and data from Haaglanden Medisch Centrum sleep staging database (https://doi
 the code performs automatic sleep staging identification
 
 
-##Sleep App
+#Sleep Application
 
 Sleep_App.py:
 
 ! requires EDFbrowser: https://www.teuniz.net/edfbrowser/
 
-Provides GUI 1. to show raw EDF of a chosen patient
+Provides GUI 
+           
+            1. to show raw EDF of a chosen patient
              
               
              2. to create a PDF report with automated sleep classification based on YASA (see Sleep_staging_YASA_pipeline.py)
@@ -28,38 +30,26 @@ Provides GUI 1. to show raw EDF of a chosen patient
 ______________________________________________________
 Sleep_staging_YASA_pipeline.py:
 
-Loads, prepocesses (filters, resamples) the data for each subject
+            1.Loads, prepocesses (filters, resamples) the data for each patient
 
-Launches YASA and stores {subject}_annotations_yasa.csv with mapped to int classification of sleep stages
+            2. Launches YASA and stores {subject}_annotations_yasa.csv with mapped to int classification of sleep stages
 
-Plots hypnograms and spectrograms 
+            3. Plots hypnograms and spectrograms 
 
-Derives and stores sleep statistics (Time in bed, Latency N1-3/REM, Share of N1-3/REM, Sleep efficiency
+            4. Derives and stores sleep statistics (Time in bed, Latency N1-3/REM, Share of N1-3/REM, Sleep efficiency
 
-for the subject from YASA package in {subject}_sleep_statistics.json"
+               for the participant from YASA package in {subject}_sleep_statistics.json"
 
-Puts sleep statistics in PDF 
-
-with a hypnogram, spectrogram
-
-Stores the PDF in {subject}_sleep_statistics.pdf
+            5. Puts sleep statistics in PDF along with a hypnogram, spectrogram. Stores the PDF in {subject}_sleep_statistics.pdf
 
 functions_pipeline.py - import to add the necessary funcs
 
 ___________________________________________________________
-Launching the project
+#Launching the project
 
 
+            1. create and activate virtual environment: python - m venv .venv1
 
-create and activate virtual environment:
+               .venv1\Scripts\Activate.ps1
 
-python - m venv .venv1
-
-
-
-.venv1\Scripts\Activate.ps1
-
-install the dependencies
-
-
-python -m pip install -r requirements.txt
+            2. install the dependencies: python -m pip install -r requirements.txt
