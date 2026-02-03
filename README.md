@@ -1,7 +1,31 @@
 # Sleep
+___________________________________________________
+Based on YASA algorithm for identifying sleep stages (https://yasa-sleep.org/index.html)
 
-Based on YASA algorithm for identifying sleep stages (https://yasa-sleep.org/index.html) the and data from Haaglanden Medisch Centrum sleep staging database (https://doi.org/10.13026/t4w7-3k21) the code performs automatic sleep staging identification
+the and data from Haaglanden Medisch Centrum sleep staging database (https://doi.org/10.13026/t4w7-3k21) 
 
+the code performs automatic sleep staging identification
+
+
+##Sleep App
+
+Sleep_App.py:
+
+! requires EDFbrowser: https://www.teuniz.net/edfbrowser/
+
+Provides GUI 1. to show raw EDF of a chosen patient
+             
+              
+             2. to create a PDF report with automated sleep classification based on YASA (see Sleep_staging_YASA_pipeline.py)
+
+
+             3. to show the PDF report from 2. with sleep statistics, a hypnogram, a spectrogram for the choisen patient
+
+
+             4. to show a huypnogram separately
+
+
+______________________________________________________
 Sleep_staging_YASA_pipeline.py:
 
 Loads, prepocesses (filters, resamples) the data for each subject
@@ -25,12 +49,17 @@ functions_pipeline.py - import to add the necessary funcs
 ___________________________________________________________
 Launching the project
 
+
+
 create and activate virtual environment:
 
 python - m venv .venv1
 
+
+
 .venv1\Scripts\Activate.ps1
 
 install the dependencies
+
 
 python -m pip install -r requirements.txt
