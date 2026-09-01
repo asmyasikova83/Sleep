@@ -85,7 +85,8 @@ def plot_spectrogram(fname_pics, chan, sf, hypno_filtered, raw):
     # Upsample our hypnogram from 0.333 Hz to 100 Hz
     hypno_up = yasa.hypno_upsample_to_data(hypno_filtered, sf_hypno=1 / 30, data=raw)
     data = raw.get_data(units="uV")
-    ax = yasa.plot_spectrogram(data[chan.index("EEG C4-M1")], sf, hypno_up)
+    #ax = yasa.plot_spectrogram(data[chan.index("EEG C4-M1")], sf, hypno_up)
+    ax = yasa.plot_spectrogram(data[chan.index("C4-Ref")], sf, hypno_up)
     fig = ax.get_figure()
     fig.set_size_inches(35, 6)
     fig.savefig(fname_pics, dpi=300, bbox_inches='tight')
@@ -96,7 +97,8 @@ def yasa_staging(fname_pics, raw):
     # selected chans performs automated sleep scoring
 
     #Better results with EOG and submental EMG
-    sls = yasa.SleepStaging(raw, eeg_name="EEG C4-M1", eog_name="EOG E2-M2", emg_name="EMG chin")
+    #sls = yasa.SleepStaging(raw, eeg_name="EEG C4-M1", eog_name="EOG E2-M2", emg_name="EMG chin")
+    sls = yasa.SleepStaging(raw, eeg_name="C4-Ref")
     hypno_pred = sls.predict()
     # Convert "W" to 0, "N1" to 1, etc
     hypno_pred = yasa.hypno_str_to_int(hypno_pred)

@@ -68,16 +68,17 @@ class SleepApp:
         # Пути
         # Определяем корневую папку — текущую рабочую директорию
         self.root_dir = Path(".")  # или Path.cwd()
+        self.root_abs = self.root_dir.resolve()
         # Setting up logger
         self.logger = set_logger()
 
         # Создаём пути к подпапкам (относительно текущей директории)
-        self.folder_yasa = self.root_dir / "yasa_annotations_metrics"
-        self.folder_pics_path = self.root_dir / "pics"
-        self.folder_statistics_path = self.root_dir / "sleep_statistics"
-        self.folder_PDF = self.root_dir / "PDF"
-        self.folder_data_anns = self.root_dir / "data_anns"
-        self.font_path = r"\\MCSSERVER\DB Temp\physionet.org\processing\Sleep\dejavu-sans-ttf-2.37\ttf\DejaVuSans.ttf"
+        self.folder_yasa = self.root_abs / "yasa_annotations_metrics"
+        self.folder_pics_path = self.root_abs / "pics"
+        self.folder_statistics_path = self.root_abs / "sleep_statistics"
+        self.folder_PDF = self.root_abs / "PDF"
+        self.folder_data_anns = self.root_abs / "data_anns"
+        self.font_path = self.root_abs / "dejavu-sans-ttf-2.37"/"ttf"/"DejaVuSans.ttf"
         self.edfbrowser_path = Path(r"C:\Program Files\EDFbrowser\edfbrowser.exe")
         self.converter_path = Path(r"C:\Program Files\MCS\NeoRec\ConverterStandalone.exe")
 
