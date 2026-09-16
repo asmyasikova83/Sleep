@@ -59,7 +59,13 @@ def preprocessing(fname_edf):
     """
 
     # 1. EDF loading
-    raw = mne.io.read_raw_edf(fname_edf, preload=True)
+    _, ext = os.path.splitext(fname_edf)
+    ext = ext.lower()  # нормализуем к нижнему регистру
+
+    if ext == '.edf':
+        raw = mne.io.read_raw_edf(fname_edf, preload=True)
+    if ext == '.bdf':
+        raw = mne.io.read_raw_bdf(fname_edf, preload=True)
     chan = raw.ch_names
 
     # 2. Resampling and filtering
@@ -87,6 +93,7 @@ def plot_spectrogram(fname_pics, chan, sf, hypno_filtered, raw):
     data = raw.get_data(units="uV")
     #ax = yasa.plot_spectrogram(data[chan.index("EEG C4-M1")], sf, hypno_up)
     ax = yasa.plot_spectrogram(data[chan.index("C4-Ref")], sf, hypno_up)
+    #ax = yasa.plot_spectrogram(data[chan.index("C4 - A1 - A2")], sf, hypno_up)
     fig = ax.get_figure()
     fig.set_size_inches(35, 6)
     fig.savefig(fname_pics, dpi=300, bbox_inches='tight')
@@ -98,7 +105,9 @@ def yasa_staging(fname_pics, raw):
 
     #Better results with EOG and submental EMG
     #sls = yasa.SleepStaging(raw, eeg_name="EEG C4-M1", eog_name="EOG E2-M2", emg_name="EMG chin")
+    #sls = yasa.SleepStaging(raw, eeg_name="C4-Ref", eog_name="EOG", emg_name="CHIN")
     sls = yasa.SleepStaging(raw, eeg_name="C4-Ref")
+    #sls = yasa.SleepStaging(raw, eeg_name="C4 - A1 - A2")
     hypno_pred = sls.predict()
     # Convert "W" to 0, "N1" to 1, etc
     hypno_pred = yasa.hypno_str_to_int(hypno_pred)

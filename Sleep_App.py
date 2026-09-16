@@ -462,8 +462,10 @@ class SleepApp:
         try:
             # Шаг 3: читаем данные
             anns_yasa = pd.read_csv(anns_yasa_name)
-            raw = mne.io.read_raw_edf(raw_eeg_name, preload=True)
-
+            if raw_eeg_name.suffix.lower() == ".edf":
+                raw = mne.io.read_raw_edf(raw_eeg_name, preload=True)
+            if raw_eeg_name.suffix.lower() == ".bdf":
+                raw = mne.io.read_raw_bdf(raw_eeg_name, preload=True)
             # Шаг 4: формируем аннотации
             length = len(anns_yasa)
             onset = [i * 30 for i in range(length)]
@@ -487,12 +489,11 @@ class SleepApp:
             full_eeg_path = folder_data_anns / output_filename
 
             mne.export.export_raw(
-                full_eeg_path,
-                raw,
-                fmt='edf',
-                overwrite=True
+                    full_eeg_path,
+                    raw,
+                    fmt='auto',
+                    overwrite=True
             )
-
             self.logger.info(f"[OK] ЭЭГ с аннотациями сна сохранена: {full_eeg_path}")
             self.update_window_title(f"Аннотации сна сохранены: {patient_name} / Sleep anns saved: {patient_name}")
 
