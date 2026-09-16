@@ -73,17 +73,9 @@ class SleepApp:
         self.logger = set_logger()
 
         # Создаём пути к подпапкам (относительно текущей директории)
-        self.folder_yasa = self.root_abs / "yasa_annotations_metrics"
-        self.folder_pics_path = self.root_abs / "pics"
-        self.folder_statistics_path = self.root_abs / "sleep_statistics"
-        self.folder_PDF = self.root_abs / "PDF"
-        self.folder_data_anns = self.root_abs / "data_anns"
         self.font_path = self.root_abs / "dejavu-sans-ttf-2.37"/"ttf"/"DejaVuSans.ttf"
         self.edfbrowser_path = Path(r"C:\Program Files\EDFbrowser\edfbrowser.exe")
         self.converter_path = Path(r"C:\Program Files\MCS\NeoRec\ConverterStandalone.exe")
-
-        # Создаём все папки при инициализации (если их нет)
-        self.create_output_directories()
 
         # Хранилище последнего выбранного пути (можно сохранить в конфиг)
         self.last_data_dir = None
@@ -289,7 +281,7 @@ class SleepApp:
         self.last_patient_name = patient_name
 
         # Проверка расширения
-        if file_path.suffix.lower() != '.edf':
+        if file_path.suffix.lower() != '.edf' and file_path.suffix.lower() != '.bdf':
             edf_file = self.convert_edf(file, patient_name)
             file_path = Path(edf_file)
             self.update_window_title("Файл с расширением .edf создан / An .edf file created")
@@ -303,6 +295,15 @@ class SleepApp:
             return None
 
         dest_path = Path(dest_dir) / file_path.name  # Полный путь к копии
+
+        self.folder_yasa = Path(dest_dir) / "yasa_annotations_metrics"
+        self.folder_pics_path = Path(dest_dir) / "pics"
+        self.folder_statistics_path = Path(dest_dir) / "sleep_statistics"
+        self.folder_PDF = Path(dest_dir) / "PDF"
+        self.folder_data_anns = Path(dest_dir) / "data_anns"
+
+        # Создаём все папки при инициализации (если их нет)
+        self.create_output_directories()
 
         # Шаг 5: проверяем, совпадают ли исходная и целевая папки
         if src_path.resolve() == dest_path.parent.resolve():
