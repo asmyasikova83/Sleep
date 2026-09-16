@@ -95,24 +95,35 @@ class SleepApp:
             "save_show_edf"
         ]
 
-        self.setup_menu()  # Выносим меню в отдельный метод
+        self.setup_menu()  # Выносим меню в отдельный метод    def convert_edf(self, file, patient_name):
+        """
+        Запускает ConverterStandalone.exe для конвертации .sm файла в .edf
+        """
+        try:
+            # Путь к ConverterStandalone.exe
+            converter_path = self.converter_path
+            if not converter_path.is_file():
+                self.update_window_title(f"\ConverterStandalone не найден / ConverterStandalone not found")
+                return
 
-    def create_output_directories(self):
-        """Создаёт все необходимые выходные папки."""
-        folders = [
-            self.folder_yasa,
-            self.folder_pics_path,
-            self.folder_statistics_path,
-            self.folder_PDF,
-            self.folder_data_anns
-        ]
+            # Запускаем ConverterStandalone
+            self.update_window_title(f"Открываю запись: {patient_name} / Opening EEG: {patient_name}")
+            subprocess.Popen([str(converter_path), '-s', '-f', 'edf', str(file)], shell=False)
+            fname = file.split('.')[0]
+            edf_file = fname + '.edf'
+            return edf_file
 
-        for folder in folders:
-            try:
-                folder.mkdir(parents=True, exist_ok=True)
-                self.logger.info(f"[OK] Папка создана/проверена: {folder}")
-            except Exception as e:
-                self.logger.error(f"[ERROR] Не удалось создать папку {folder}: {e}")
+        except Exception as e:  # только здесь e определена
+            self.update_window_title(f"Не удалось запустить ConverterStandalone / Failed to run ConverterStandalone")
+            self.root.after(5000, lambda: self.update_window_title(""))
+        except Exception as e:  # только здесь e определена
+            self.update_window_title(f"Не удалось запустить ConverterStandalone / Failed to run ConverterStandalone")
+            self.root.after(5000, lambda: self.update_window_title(""))
+
+
+        except Exception as e:  # только здесь e определена
+            self.update_window_title(f"Не удалось запустить ConverterStandalone / Failed to run ConverterStandalone")
+            self.root.after(5000, lambda: self.update_window_title(""))
 
     def create_buttons(self):
         # Кнопка 0: Загрузить EEG
@@ -153,186 +164,22 @@ class SleepApp:
         )
         self.btn_save_show_edf.grid(row=2, column=0, padx=20, pady=(10, 15), sticky="ew")
 
-    def update_menu_state(self):
-        """Включает/отключает пункты меню в зависимости от выполненных шагов."""
-        # Load EEG — всегда доступна (начальная точка)
-        self.data_menu.entryconfig("Load EEG", state="normal")
+    def create_output_directories(self):
+        """Создаёт все необходимые выходные папки."""
+        folders = [
+            self.folder_yasa,
+            self.folder_pics_path,
+            self.folder_statistics_path,
+            self.folder_PDF,
+            self.folder_data_anns
+        ]
 
-        # Create and show PDF-report — доступна только после Load EEG
-        if self.step_completed["load_raw_eeg"]:
-            self.data_menu.entryconfig("Create and show PDF-report ", state="normal")
-        else:
-            self.data_menu.entryconfig("Create and show PDF-report ", state="disabled")
-
-        # Save and show EEG — доступна только после Create and show PDF-report
-        if self.step_completed["create_show_report"]:
-            self.data_menu.entryconfig("Save and show EEG", state="normal")
-        else:
-            self.data_menu.entryconfig("Save and show EEG", state="disabled")
-
-        # About и Exit — всегда доступны
-        self.data_menu.entryconfig("About", state="normal")
-        self.data_menu.entryconfig("Exit", state="normal")
-
-    def setup_menu(self):
-        self.menu = tk.Menu(self.root)
-        self.root.config(menu=self.menu)
-
-        self.data_menu = tk.Menu(self.menu, tearoff=0)
-        self.menu.add_cascade(label="Menu", menu=self.data_menu)
-
-        self.data_menu.add_command(label="About", command=self.show_about)
-        self.data_menu.add_command(label="Load EEG", command=self.load_raw_edf)
-        self.data_menu.add_command(label="Create and show PDF-report ", command=self.create_show_report)
-        self.data_menu.add_command(label="Save and show EEG", command=self.save_show_edf)
-        self.data_menu.add_command(label="Exit", command=self.exit_app)
-
-        # Первоначальная настройка состояния меню
-        self.update_menu_state()
-
-    def show_about(self):
-        messagebox.showinfo(
-            "О программе",
-            "Соня: cистема просмотра и анализа записей сна \n"
-            "Версия: 1.0\n"
-            "Разработчик: Александра\n\n"
-            "Использует YASA для автоматической классификации стадий и рассчета статистики сна\n\n"
-            "Использует EDFbrowser для визуализации .edf-файлов\n\n"
-        )
-
-    def update_window_title(self, message=""):
-        """Обновляет текст в статус‑метке под кнопками (синее окно).
-        Если сообщение слишком длинное — обрезает его."""
-        max_length = 120  # Увеличили лимит для большого окна
-
-        if message:
-            # Обрезаем сообщение, если оно длиннее max_length
-            if len(message) > max_length:
-                message = message[:max_length - 3] + "..."
-            # Обновляем текст метки
-            self.status_label.config(text=message)
-        else:
-            # Очищаем окно, если сообщение пустое
-            self.status_label.config(text="")
-
-    def get_name_edf_file(self):
-        """
-        Запрашивает имя пациента и путь к EDF‑файлу.
-        Возвращает: (patient_name: str, edf_file: Path) или (None, None) при ошибке.
-        """
-        # 1. Интерактивный выбор файла с записью пациента
-        edf_file = self.load_raw_edf()
-
-        patient_name = Path(edf_file).stem
-
-        self.update_window_title(f"Имя пациента: {patient_name} / Patient's name:  {patient_name}")
-
-        return patient_name, edf_file
-
-    def load_raw_edf(self):
-        """
-        Предлагает пользователю:
-        1. Выбрать .edf‑файл для загрузки.
-        2. Выбрать папку, куда скопировать этот файл.
-        Если исходная и целевая папки совпадают — файл не копируется,
-        возвращается исходный путь. Иначе — копирует и возвращает путь к копии.
-        """
-
-        # Шаг 0: выбираем исходную папку (где лежит EDF)
-        initial_dir = str(self.last_data_dir) if self.last_data_dir else "/"
-        src_dir = filedialog.askdirectory(
-            initialdir=initial_dir,
-            title="Выберите папку с EDF‑файлами / Select EDF source folder"
-        )
-        if not src_dir:
-            self.update_window_title("Выбор папки отменён / Folder selection cancelled")
-            return None
-
-        src_path = Path(src_dir)
-
-        # Шаг 1: выбираем сам EDF‑файл
-        file = filedialog.askopenfilename(
-            initialdir=src_dir,
-            title="Выберите файл для загрузки / Choose file to load",
-            filetypes=[("All files", "*.*")] #("EDF files", "*.edf"),
-        )
-
-        if not file:
-            self.update_window_title("Выбор файла отменён / EDF file selection cancelled")
-            return None
-
-        file_path = Path(file)
-        patient_name = Path(file).stem
-
-        # 2. Проверяем, изменился ли пациент
-        if self.last_patient_name != patient_name:
-            # Пациент сменился — сбрасываем состояние шагов
-            self.step_completed = {
-                "load_raw_eeg": True,  # считаем, что загрузка выполнена (мы только что выбрали файл)
-                "create_show_report": False,
-                "save_show_edf": False
-            }
-            self.update_menu_state()
-            self.btn_create_show_report.config(state="disabled")
-            self.btn_save_show_edf.config(state="disabled")
-            self.logger.info(f"[INFO] Сменился пациент. Сброс состояния шагов. Новый пациент: {patient_name}")
-
-        # 2. Сохраняем имя текущего пациента как последнее
-        self.last_patient_name = patient_name
-
-        # Проверка расширения
-        if file_path.suffix.lower() != '.edf' and file_path.suffix.lower() != '.bdf':
-            edf_file = self.convert_edf(file, patient_name)
-            file_path = Path(edf_file)
-            self.update_window_title("Файл с расширением .edf создан / An .edf file created")
-
-        # Шаг 4: выбираем целевую папку
-        dest_dir = filedialog.askdirectory(
-            title="Выберите целевую папку для EDF‑файла / Select destination folder for EDF-file"
-        )
-        if not dest_dir:
-            self.update_window_title("Выбор целевой папки отменён / Destination folder selection cancelled")
-            return None
-
-        dest_path = Path(dest_dir) / file_path.name  # Полный путь к копии
-
-        self.folder_yasa = Path(dest_dir) / "yasa_annotations_metrics"
-        self.folder_pics_path = Path(dest_dir) / "pics"
-        self.folder_statistics_path = Path(dest_dir) / "sleep_statistics"
-        self.folder_PDF = Path(dest_dir) / "PDF"
-        self.folder_data_anns = Path(dest_dir) / "data_anns"
-
-        # Создаём все папки при инициализации (если их нет)
-        self.create_output_directories()
-
-        # Шаг 5: проверяем, совпадают ли исходная и целевая папки
-        if src_path.resolve() == dest_path.parent.resolve():
-            # Папки совпадают: не копируем, возвращаем исходный путь
-            self.update_window_title(
-                f"Файл уже в целевой папке: {file_path.name} / File already in destination: {file_path.name}"
-            )
-            self.btn_create_show_report.config(state="normal")
-            self.step_completed["load_raw_eeg"] = True
-            self.update_menu_state()
-            self.root.after(3000, lambda: self.update_window_title(""))
-
-            return file_path  # Возвращаем исходный путь
-
-        # Шаг 6: копируем файл (папки различаются)
-        try:
-            shutil.copy2(file_path, dest_path)  # copy2 сохраняет метаданные
-            self.update_window_title(
-                f"Файл скопирован: {dest_path.name} / File copied: {dest_path.name}"
-            )
-            self.root.after(3000, lambda: self.update_window_title(""))
-            self.btn_create_show_report.config(state="normal")
-            self.step_completed["load_raw_eeg"] = True
-            self.update_menu_state()
-            return dest_path  # Возвращаем путь к скопированному файлу
-
-        except Exception as e:
-            self.update_window_title(f"Ошибка копирования: {e} / Copy error: {e}")
-            return None
+        for folder in folders:
+            try:
+                folder.mkdir(parents=True, exist_ok=True)
+                self.logger.info(f"[OK] Папка создана/проверена: {folder}")
+            except Exception as e:
+                self.logger.error(f"[ERROR] Не удалось создать папку {folder}: {e}")
 
     def create_show_report(self):
         """Запускает процесс создания отчёта через YASA в отдельном потоке с логированием."""
@@ -427,6 +274,125 @@ class SleepApp:
         self.btn_save_show_edf.config(state="normal")
 
         return
+
+    def get_name_edf_file(self):
+        """
+        Запрашивает имя пациента и путь к EDF‑файлу.
+        Возвращает: (patient_name: str, edf_file: Path) или (None, None) при ошибке.
+        """
+        # 1. Интерактивный выбор файла с записью пациента
+        edf_file = self.load_raw_edf()
+
+        patient_name = Path(edf_file).stem
+
+        self.update_window_title(f"Имя пациента: {patient_name} / Patient's name:  {patient_name}")
+
+        return patient_name, edf_file
+
+    def load_raw_edf(self):
+        """
+        Предлагает пользователю:
+        1. Выбрать .edf‑файл для загрузки.
+        2. Выбрать папку, куда скопировать этот файл.
+        Если исходная и целевая папки совпадают — файл не копируется,
+        возвращается исходный путь. Иначе — копирует и возвращает путь к копии.
+        """
+
+        # Шаг 0: выбираем исходную папку (где лежит EDF)
+        initial_dir = str(self.last_data_dir) if self.last_data_dir else "/"
+        src_dir = filedialog.askdirectory(
+            initialdir=initial_dir,
+            title="Выберите папку с файлами с данными/ Select data source folder"
+        )
+        if not src_dir:
+            self.update_window_title("Выбор папки отменён / Folder selection cancelled")
+            return None
+
+        src_path = Path(src_dir)
+
+        # Шаг 1: выбираем сам EDF‑файл
+        file = filedialog.askopenfilename(
+            initialdir=src_dir,
+            title="Выберите файл для загрузки / Choose file to load",
+            filetypes=[("All files", "*.*")] #("EDF files", "*.edf"),
+        )
+
+        if not file:
+            self.update_window_title("Выбор файла отменён / Data file selection cancelled")
+            return None
+
+        file_path = Path(file)
+        patient_name = Path(file).stem
+
+        # 2. Проверяем, изменился ли пациент
+        if self.last_patient_name != patient_name:
+            # Пациент сменился — сбрасываем состояние шагов
+            self.step_completed = {
+                "load_raw_eeg": True,  # считаем, что загрузка выполнена (мы только что выбрали файл)
+                "create_show_report": False,
+                "save_show_edf": False
+            }
+            self.update_menu_state()
+            self.btn_create_show_report.config(state="disabled")
+            self.btn_save_show_edf.config(state="disabled")
+            self.logger.info(f"[INFO] Сменился пациент. Сброс состояния шагов. Новый пациент: {patient_name}")
+
+        # 2. Сохраняем имя текущего пациента как последнее
+        self.last_patient_name = patient_name
+
+        # Проверка расширения
+        if file_path.suffix.lower() != '.edf' and file_path.suffix.lower() != '.bdf':
+            edf_file = self.convert_edf(file, patient_name)
+            file_path = Path(edf_file)
+            self.update_window_title("Файл с расширением .edf создан / An .edf file created")
+
+        # Шаг 4: выбираем целевую папку
+        dest_dir = filedialog.askdirectory(
+            title="Выберите целевую папку для файла c данными/ Select destination folder for data file"
+        )
+        if not dest_dir:
+            self.update_window_title("Выбор целевой папки отменён / Destination folder selection cancelled")
+            return None
+
+        dest_path = Path(dest_dir) / file_path.name  # Полный путь к копии
+
+        self.folder_yasa = Path(dest_dir) / "yasa_annotations_metrics"
+        self.folder_pics_path = Path(dest_dir) / "pics"
+        self.folder_statistics_path = Path(dest_dir) / "sleep_statistics"
+        self.folder_PDF = Path(dest_dir) / "PDF"
+        self.folder_data_anns = Path(dest_dir) / "data_anns"
+
+        # Создаём все папки при инициализации (если их нет)
+        self.create_output_directories()
+
+        # Шаг 5: проверяем, совпадают ли исходная и целевая папки
+        if src_path.resolve() == dest_path.parent.resolve():
+            # Папки совпадают: не копируем, возвращаем исходный путь
+            self.update_window_title(
+                f"Файл уже в целевой папке: {file_path.name} / File already in destination: {file_path.name}"
+            )
+            self.btn_create_show_report.config(state="normal")
+            self.step_completed["load_raw_eeg"] = True
+            self.update_menu_state()
+            self.root.after(3000, lambda: self.update_window_title(""))
+
+            return file_path  # Возвращаем исходный путь
+
+        # Шаг 6: копируем файл (папки различаются)
+        try:
+            shutil.copy2(file_path, dest_path)  # copy2 сохраняет метаданные
+            self.update_window_title(
+                f"Файл скопирован: {dest_path.name} / File copied: {dest_path.name}"
+            )
+            self.root.after(3000, lambda: self.update_window_title(""))
+            self.btn_create_show_report.config(state="normal")
+            self.step_completed["load_raw_eeg"] = True
+            self.update_menu_state()
+            return dest_path  # Возвращаем путь к скопированному файлу
+
+        except Exception as e:
+            self.update_window_title(f"Ошибка копирования: {e} / Copy error: {e}")
+            return None
 
     def save_show_edf(self):
         """
@@ -528,42 +494,72 @@ class SleepApp:
             self.root.after(5000, lambda: self.update_window_title(""))
             return False
 
-    def convert_edf(self, file, patient_name):
-        """
-        Запускает ConverterStandalone.exe для конвертации .sm файла в .edf
-        """
-        try:
-            # Путь к ConverterStandalone.exe
-            converter_path = self.converter_path
-            if not converter_path.is_file():
-                self.update_window_title(f"\ConverterStandalone не найден / ConverterStandalone not found")
-                return
+    def setup_menu(self):
+        self.menu = tk.Menu(self.root)
+        self.root.config(menu=self.menu)
 
-            # Запускаем ConverterStandalone
-            self.update_window_title(f"Открываю запись: {patient_name} / Opening EEG: {patient_name}")
-            subprocess.Popen([str(converter_path), '-s', '-f', 'edf', str(file)], shell=False)
-            fname = file.split('.')[0]
-            edf_file = fname + '.edf'
-            return edf_file
+        self.data_menu = tk.Menu(self.menu, tearoff=0)
+        self.menu.add_cascade(label="Menu", menu=self.data_menu)
 
-        except Exception as e:  # только здесь e определена
-            self.update_window_title(f"Не удалось запустить ConverterStandalone / Failed to run ConverterStandalone")
-            self.root.after(5000, lambda: self.update_window_title(""))
-        except Exception as e:  # только здесь e определена
-            self.update_window_title(f"Не удалось запустить ConverterStandalone / Failed to run ConverterStandalone")
-            self.root.after(5000, lambda: self.update_window_title(""))
+        self.data_menu.add_command(label="About", command=self.show_about)
+        self.data_menu.add_command(label="Load EEG", command=self.load_raw_edf)
+        self.data_menu.add_command(label="Create and show PDF-report ", command=self.create_show_report)
+        self.data_menu.add_command(label="Save and show EEG", command=self.save_show_edf)
+        self.data_menu.add_command(label="Exit", command=self.exit_app)
 
+        # Первоначальная настройка состояния меню
+        self.update_menu_state()
 
-        except Exception as e:  # только здесь e определена
-            self.update_window_title(f"Не удалось запустить ConverterStandalone / Failed to run ConverterStandalone")
-            self.root.after(5000, lambda: self.update_window_title(""))
+    def show_about(self):
+        messagebox.showinfo(
+            "О программе",
+            "Соня: cистема просмотра и анализа записей сна \n"
+            "Версия: 1.0\n"
+            "Разработчик: Александра\n\n"
+            "Использует YASA для автоматической классификации стадий и рассчета статистики сна\n\n"
+            "Использует EDFbrowser для визуализации файлов c данными\n\n"
+        )
+
+    def update_menu_state(self):
+        """Включает/отключает пункты меню в зависимости от выполненных шагов."""
+        # Load EEG — всегда доступна (начальная точка)
+        self.data_menu.entryconfig("Load EEG", state="normal")
+
+        # Create and show PDF-report — доступна только после Load EEG
+        if self.step_completed["load_raw_eeg"]:
+            self.data_menu.entryconfig("Create and show PDF-report ", state="normal")
+        else:
+            self.data_menu.entryconfig("Create and show PDF-report ", state="disabled")
+
+        # Save and show EEG — доступна только после Create and show PDF-report
+        if self.step_completed["create_show_report"]:
+            self.data_menu.entryconfig("Save and show EEG", state="normal")
+        else:
+            self.data_menu.entryconfig("Save and show EEG", state="disabled")
+
+        # About и Exit — всегда доступны
+        self.data_menu.entryconfig("About", state="normal")
+        self.data_menu.entryconfig("Exit", state="normal")
+
+    def update_window_title(self, message=""):
+        """Обновляет текст в статус‑метке под кнопками (синее окно).
+        Если сообщение слишком длинное — обрезает его."""
+        max_length = 120  # Увеличили лимит для большого окна
+
+        if message:
+            # Обрезаем сообщение, если оно длиннее max_length
+            if len(message) > max_length:
+                message = message[:max_length - 3] + "..."
+            # Обновляем текст метки
+            self.status_label.config(text=message)
+        else:
+            # Очищаем окно, если сообщение пустое
+            self.status_label.config(text="")
 
     def exit_app(self):
         self.update_window_title("Выходим из программы / Exiting")
         self.root.after(5000, lambda: self.update_window_title(""))
         self.root.quit()
-
-
 
 if __name__ == "__main__":
     root = tk.Tk()

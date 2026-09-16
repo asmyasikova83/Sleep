@@ -91,9 +91,9 @@ def plot_spectrogram(fname_pics, chan, sf, hypno_filtered, raw):
     # Upsample our hypnogram from 0.333 Hz to 100 Hz
     hypno_up = yasa.hypno_upsample_to_data(hypno_filtered, sf_hypno=1 / 30, data=raw)
     data = raw.get_data(units="uV")
-    #ax = yasa.plot_spectrogram(data[chan.index("EEG C4-M1")], sf, hypno_up)
-    ax = yasa.plot_spectrogram(data[chan.index("C4-Ref")], sf, hypno_up)
-    #ax = yasa.plot_spectrogram(data[chan.index("C4 - A1 - A2")], sf, hypno_up)
+    target_eeg = ['C3', 'C4', 'EEG C4-M1', 'EEG C4', 'EEG C4-M1', 'C4-Ref', 'C4 - A1 - A2']
+    available_eeg = next((ch for ch in target_eeg if ch in raw.ch_names), None)
+    ax = yasa.plot_spectrogram(data[chan.index(available_eeg)], sf, hypno_up)
     fig = ax.get_figure()
     fig.set_size_inches(35, 6)
     fig.savefig(fname_pics, dpi=300, bbox_inches='tight')
@@ -102,12 +102,31 @@ def plot_spectrogram(fname_pics, chan, sf, hypno_filtered, raw):
 def yasa_staging(fname_pics, raw):
     # Core function: based on raw recording from
     # selected chans performs automated sleep scoring
+    target_eeg = ['C3', 'C4', 'EEG C4-M1', 'EEG C4', 'C4-Ref', 'C4 - A1 - A2']
+    target_eog = ['EOG E2-M2', 'EOG E1-M1']
+    target_emg = ['EMG chin', 'CHIN']
 
-    #Better results with EOG and submental EMG
-    #sls = yasa.SleepStaging(raw, eeg_name="EEG C4-M1", eog_name="EOG E2-M2", emg_name="EMG chin")
-    #sls = yasa.SleepStaging(raw, eeg_name="C4-Ref", eog_name="EOG", emg_name="CHIN")
-    sls = yasa.SleepStaging(raw, eeg_name="C4-Ref")
-    #sls = yasa.SleepStaging(raw, eeg_name="C4 - A1 - A2")
+    # Ищем первый доступный канал каждого типа
+    available_eeg = next((ch for ch in target_eeg if ch in raw.ch_names), None)
+    available_eog = next((ch for ch in target_eog if ch in raw.ch_names), None)
+    available_emg = next((ch for ch in target_emg if ch in raw.ch_names), None)
+
+    # Проверяем, что хотя бы EEG найден (он обязателен для SleepStaging)
+    if available_eeg is None:
+        raise ValueError(f"Ни один из EEG-каналов не найден: {target_eeg}")
+
+    print(f"EEG: {available_eeg}")
+    print(f"EOG: {available_eog}")
+    print(f"EMG: {available_emg}")
+
+    # yasa.SleepStaging принимает строки, не списки
+    sls = yasa.SleepStaging(
+        raw,
+        eeg_name=available_eeg,
+        eog_name=available_eog,  # может быть None — yasa это допускает
+        emg_name=available_emg  # тоже может быть None
+    )
+
     hypno_pred = sls.predict()
     # Convert "W" to 0, "N1" to 1, etc
     hypno_pred = yasa.hypno_str_to_int(hypno_pred)
