@@ -16,7 +16,10 @@ GUI for EDF/BDF/SM files:
 
             2. Data visualization: displays the EDF/BDF file content with an overlaid hypnogram.
 
+
 `config.py` - import to add channel names and settings for processing data
+
+
 `functions_pipeline.py` - import to add the funcs for data processing
 
 ___________________________________________________________
