@@ -6,6 +6,11 @@ import yasa
 import matplotlib.pyplot as plt
 from fpdf import FPDF
 import logging
+import config as cfg
+
+target_eeg = cfg.target_eeg
+target_emg = cfg.target_emg
+target_eog = cfg.target_eog
 
 def set_logger():
     # Set the logger
@@ -91,7 +96,6 @@ def plot_spectrogram(fname_pics, chan, sf, hypno_filtered, raw):
     # Upsample our hypnogram from 0.333 Hz to 100 Hz
     hypno_up = yasa.hypno_upsample_to_data(hypno_filtered, sf_hypno=1 / 30, data=raw)
     data = raw.get_data(units="uV")
-    target_eeg = ['C3', 'C4', 'EEG C4-M1', 'EEG C4', 'EEG C4-M1', 'C4-Ref', 'C4 - A1 - A2']
     available_eeg = next((ch for ch in target_eeg if ch in raw.ch_names), None)
     ax = yasa.plot_spectrogram(data[chan.index(available_eeg)], sf, hypno_up)
     fig = ax.get_figure()
@@ -99,12 +103,9 @@ def plot_spectrogram(fname_pics, chan, sf, hypno_filtered, raw):
     fig.savefig(fname_pics, dpi=300, bbox_inches='tight')
     plt.close(fig)
 
-def yasa_staging(fname_pics, raw):
+def yasa_staging(raw):
     # Core function: based on raw recording from
     # selected chans performs automated sleep scoring
-    target_eeg = ['C3', 'C4', 'EEG C4-M1', 'EEG C4', 'C4-Ref', 'C4 - A1 - A2']
-    target_eog = ['EOG E2-M2', 'EOG E1-M1']
-    target_emg = ['EMG chin', 'CHIN']
 
     # Ищем первый доступный канал каждого типа
     available_eeg = next((ch for ch in target_eeg if ch in raw.ch_names), None)

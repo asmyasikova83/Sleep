@@ -210,7 +210,7 @@ class SleepApp:
         self.logger.info("[INFO] Запускаю YASA для стадирования сна")
         self.update_window_title(f"Cтадирование сна: {patient_name} / Sleep staging: {patient_name}")
         hypno_pics = folder_pics_path / f"hypnogram_{patient_name}_yasa.png"
-        hypno_predicted = yasa_staging(hypno_pics, raw)
+        hypno_predicted = yasa_staging(raw)
         self.logger.info("[OK] Стадирование YASA завершено")
         self.update_window_title(f"Стадирование сна завершено: {patient_name} / Sleep staging completed: {patient_name}")
 
