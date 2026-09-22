@@ -95,31 +95,24 @@ class SleepApp:
             "save_show_edf"
         ]
 
-        self.setup_menu()  # Выносим меню в отдельный метод    def convert_edf(self, file, patient_name):
+        self.setup_menu()  # Выносим меню в отдельный метод
+
+    def convert_sms(self, file, patient_name):
         """
-        Запускает ConverterStandalone.exe для конвертации .sm файла в .edf
+        Запускает ConverterStandalone.exe для конвертации .sm, .sms файла в .edf
         """
         try:
             # Путь к ConverterStandalone.exe
             converter_path = self.converter_path
             if not converter_path.is_file():
-                self.update_window_title(f"\ConverterStandalone не найден / ConverterStandalone not found")
+                self.update_window_title(f"ConverterStandalone не найден / ConverterStandalone not found")
                 return
-
             # Запускаем ConverterStandalone
             self.update_window_title(f"Открываю запись: {patient_name} / Opening EEG: {patient_name}")
             subprocess.Popen([str(converter_path), '-s', '-f', 'edf', str(file)], shell=False)
             fname = file.split('.')[0]
             edf_file = fname + '.edf'
             return edf_file
-
-        except Exception as e:  # только здесь e определена
-            self.update_window_title(f"Не удалось запустить ConverterStandalone / Failed to run ConverterStandalone")
-            self.root.after(5000, lambda: self.update_window_title(""))
-        except Exception as e:  # только здесь e определена
-            self.update_window_title(f"Не удалось запустить ConverterStandalone / Failed to run ConverterStandalone")
-            self.root.after(5000, lambda: self.update_window_title(""))
-
 
         except Exception as e:  # только здесь e определена
             self.update_window_title(f"Не удалось запустить ConverterStandalone / Failed to run ConverterStandalone")
@@ -184,7 +177,7 @@ class SleepApp:
     def create_show_report(self):
         """Запускает процесс создания отчёта через YASA в отдельном потоке с логированием."""
 
-        patient_name, edf_file = self.get_name_edf_file()
+        patient_name, patient_stem, edf_file = self.get_name_edf_file()
 
         if not patient_name:
             return
@@ -283,11 +276,12 @@ class SleepApp:
         # 1. Интерактивный выбор файла с записью пациента
         edf_file = self.load_raw_edf()
 
-        patient_name = Path(edf_file).stem
+        patient_name = Path(edf_file).name
+        patient_stem = Path(edf_file).stem
 
         self.update_window_title(f"Имя пациента: {patient_name} / Patient's name:  {patient_name}")
 
-        return patient_name, edf_file
+        return patient_name, patient_stem, edf_file
 
     def load_raw_edf(self):
         """
@@ -343,7 +337,7 @@ class SleepApp:
         self.last_patient_name = patient_name
 
         suffix = file_path.suffix.lower()
-        if suffix not in ('.sm', '.edf', '.bdf'):
+        if suffix not in ('.sm','.sms', '.edf', '.bdf'):
             msg = (
                 "Файл .edf/.bdf/.sm не обнаружен. Проверьте данные. / "
                 "The file has no .edf/.bdf/.sm extension. Please check the data."
@@ -352,8 +346,8 @@ class SleepApp:
             return
 
         # Конвертировать .sm в .edf
-        if suffix == '.sm':
-            edf_file = self.convert_edf(file, patient_name)
+        if suffix in ('.sm', '.sms'):
+            edf_file = self.convert_sms(file, patient_name)
             file_path = Path(edf_file)
             self.update_window_title("Файл с расширением .edf создан / An .edf file created")
 
@@ -416,7 +410,7 @@ class SleepApp:
         self.logger.info(f"[OK] Директория для записи ЭЭГ и меток сна создана/проверена: {folder_data_anns}")
 
         # Шаг 1: получаем имя пациента и путь к EDF
-        patient_name, eeg_file = self.get_name_edf_file()
+        patient_name, patient_stem, eeg_file = self.get_name_edf_file()
         if not patient_name:
             self.update_window_title("Ошибка: не выбран пациент / No patient selected")
             return False
@@ -462,7 +456,7 @@ class SleepApp:
             raw.set_annotations(annotations)
 
             # Шаг 5: сохраняем результат
-            output_filename = f"{patient_name}_with_anns.edf"
+            output_filename = f"{patient_stem}_with_anns.edf"
             full_eeg_path = folder_data_anns / output_filename
 
             mne.export.export_raw(
@@ -472,7 +466,7 @@ class SleepApp:
                     overwrite=True
             )
             self.logger.info(f"[OK] ЭЭГ с аннотациями сна сохранена: {full_eeg_path}")
-            self.update_window_title(f"Аннотации сна сохранены: {patient_name} / Sleep anns saved: {patient_name}")
+            self.update_window_title(f"Аннотации сна сохранены: {patient_stem} / Sleep anns saved: {patient_stem}")
 
             # Шаг 6: открываем в EDFbrowser
             try:
