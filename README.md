@@ -7,7 +7,8 @@ Based on YASA algorithm for identifying sleep stages (https://yasa-sleep.org/ind
 
 Sleep_App.py:
 
-! requires EDFbrowser: https://www.teuniz.net/edfbrowser/
+> Attention!::q
+            requires EDFbrowser: https://www.teuniz.net/edfbrowser/
 
 Provides GUI 
 
@@ -19,11 +20,11 @@ config.py - import to add channel names and settings for processing data
 functions_pipeline.py - import to add the necessary funcs
 
 ___________________________________________________________
-## Launching the project
+## Requirements
 
-
-            1. create and activate virtual environment: python - m venv .venv1
-
-               .venv1\Scripts\Activate.ps1
-
-            2. install the dependencies: python -m pip install -r requirements.txt
+            fpdf2==2.5
+            matplotlib==3.8.4
+            mne==1.6.1
+            numpy==1.25.2
+            pandas==2.3.3
+            yasa==0.6.5
