@@ -310,11 +310,13 @@ class SleepApp:
 
         src_path = Path(src_dir)
 
-        # Шаг 1: выбираем сам EDF‑файл
+        # Шаг 1: выбираем файл c данными
         file = filedialog.askopenfilename(
             initialdir=src_dir,
-            title="Выберите файл для загрузки / Choose file to load",
-            filetypes=[("All files", "*.*")] #("EDF files", "*.edf"),
+            title="Выберите файл для загрузки: .edf, .bdf, .sm / Choose file to load",
+            filetypes=[
+                ("All files", "*.*")
+            ]
         )
 
         if not file:
@@ -322,7 +324,7 @@ class SleepApp:
             return None
 
         file_path = Path(file)
-        patient_name = Path(file).stem
+        patient_name = Path(file).name
 
         # 2. Проверяем, изменился ли пациент
         if self.last_patient_name != patient_name:
@@ -335,13 +337,22 @@ class SleepApp:
             self.update_menu_state()
             self.btn_create_show_report.config(state="disabled")
             self.btn_save_show_edf.config(state="disabled")
-            self.logger.info(f"[INFO] Сменился пациент. Сброс состояния шагов. Новый пациент: {patient_name}")
+            self.logger.info(f"[INFO] Сменился пациент. Сброс состояния шагов. Новый пациент:  {patient_name}")
 
         # 2. Сохраняем имя текущего пациента как последнее
         self.last_patient_name = patient_name
 
-        # Проверка расширения
-        if file_path.suffix.lower() != '.edf' and file_path.suffix.lower() != '.bdf':
+        suffix = file_path.suffix.lower()
+        if suffix not in ('.sm', '.edf', '.bdf'):
+            msg = (
+                "Файл .edf/.bdf/.sm не обнаружен. Проверьте данные. / "
+                "The file has no .edf/.bdf/.sm extension. Please check the data."
+            )
+            self.update_window_title(msg)
+            return
+
+        # Конвертировать .sm в .edf
+        if suffix == '.sm':
             edf_file = self.convert_edf(file, patient_name)
             file_path = Path(edf_file)
             self.update_window_title("Файл с расширением .edf создан / An .edf file created")
