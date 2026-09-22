@@ -10,14 +10,14 @@ Based on YASA algorithm for identifying sleep stages (https://yasa-sleep.org/ind
 > Attention!
             requires EDFbrowser: https://www.teuniz.net/edfbrowser/
 
-Provides GUI 
+GUI for EDF/BDF/SM files:
 
-            1. to create a PDF report with sleep statistics, a hypnogram, a spectrogram for the choisen patient
+            1. PDF report generation: produces a report containing sleep statistics, a hypnogram, and a spectrogram.
 
-            2. to show EDF/BDF of a patient with a huypnogram
+            2. Data visualization: displays the EDF/BDF file content with an overlaid hypnogram.
 
 `config.py` - import to add channel names and settings for processing data
-`functions_pipeline.py` - import to add the necessary funcs
+`functions_pipeline.py` - import to add the funcs for data processing
 
 ___________________________________________________________
 ## Requirements
