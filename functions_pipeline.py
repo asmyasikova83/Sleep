@@ -75,9 +75,9 @@ def preprocessing(fname_edf):
 
     # 2. Resampling and filtering
     # As in https://yasa-sleep.org/quickstart.html
-    raw.resample(100)  # ресемплинг до 100 Гц
+    raw.resample(cfg.resample_rate)
     sf = raw.info["sfreq"]  # новая частота дискретизации
-    raw.filter(0.3, 45)  # полосовой фильтр (0.3–45 Гц)
+    raw.filter(cfg.low_cutoff_freq , cfg.high_cutoff_freq)  # полосовой фильтр (0.3–45 Гц)
 
     return raw, chan, sf
 
