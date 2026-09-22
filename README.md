@@ -5,9 +5,9 @@ Based on YASA algorithm for identifying sleep stages (https://yasa-sleep.org/ind
 
 ## Sonya Sleep Application
 
-Sleep_App.py:
+`Sleep_App.py`:
 
-> Attention!::q
+> Attention!
             requires EDFbrowser: https://www.teuniz.net/edfbrowser/
 
 Provides GUI 
@@ -16,8 +16,8 @@ Provides GUI
 
             2. to show EDF/BDF of a patient with a huypnogram
 
-config.py - import to add channel names and settings for processing data
-functions_pipeline.py - import to add the necessary funcs
+`config.py` - import to add channel names and settings for processing data
+`functions_pipeline.py` - import to add the necessary funcs
 
 ___________________________________________________________
 ## Requirements
