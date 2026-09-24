@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import sys
 import time
 import mne
@@ -19,8 +20,6 @@ def check_ready(deadline):
         os.path.exists("data/output.txt") or
         time.time() >= deadline
     )
-
-
 
 def create_sleep_statistics_pdf(subject, stat, output_folder, image_path, font_path):
     # Builds a PDF file with sleep statistics and hypnogram/spectrogram
@@ -118,6 +117,22 @@ def create_sleep_statistics_pdf(subject, stat, output_folder, image_path, font_p
     filename = os.path.join(output_folder, f"{subject}_sleep_statistics.pdf")
     pdf.output(filename)
 
+def set_reference(raw):
+    # Set bipolar reference
+
+    raw_bip = raw.copy()
+
+    raw_bip = mne.set_bipolar_reference(
+        raw_bip,
+        anode=cfg.anodes,
+        cathode=cfg.cathodes,
+        ch_name=cfg.ch_names,
+        drop_refs=True,
+        verbose=False
+    )
+
+    return raw_bip
+
 def plot_hypnogram(fname_pics, hypno_filtered):
     # Based on YASA's annotations plots a hypnogram
 
@@ -161,15 +176,45 @@ def preprocessing(fname_edf):
         raw = mne.io.read_raw_edf(fname_edf, preload=True)
     if ext == '.bdf':
         raw = mne.io.read_raw_bdf(fname_edf, preload=True)
-    chan = raw.ch_names
 
     # 2. Resampling and filtering
     # As in https://yasa-sleep.org/quickstart.html
-    raw.resample(cfg.resample_rate)
-    sf = raw.info["sfreq"]  # новая частота дискретизации
-    raw.filter(cfg.low_cutoff_freq , cfg.high_cutoff_freq)  # полосовой фильтр (0.3–45 Гц)
+    raw.rename_channels(cfg.ch_renamed)
+    raw_ref  = set_reference(raw)
 
-    return raw, chan, sf
+    raw_ref.notch_filter(
+        freqs=50,
+        method='fir',
+        filter_length='auto',
+        phase='zero',
+        fir_window='hamming',
+        fir_design='firwin',
+        trans_bandwidth=2.5,  # ширина переходной полосы (Гц)
+        n_jobs=4  # параллельные потоки для скорости
+    )
+
+    raw_filt = set_filters(raw_ref)
+    raw_ref.resample(cfg.resample_rate)
+
+    sf = raw_ref.info["sfreq"]
+    chan = raw_ref.ch_names
+
+    fname_edf = Path(fname_edf)
+    dir_path = fname_edf.parent
+    base_name = fname_edf.stem  # имя без расширения (brux1)
+
+    # Формируем новое имя: brux1_processed.edf
+    new_name = f"{base_name}_processed.edf"
+    out_path = dir_path / new_name
+
+    mne.export.export_raw(
+        out_path,
+        raw_filt,
+        fmt='auto',
+        overwrite=True
+    )
+
+    return raw_filt, chan, sf
 
 def set_logger():
     # Set the logger
@@ -200,6 +245,16 @@ def set_logger():
     )
     logger.addHandler(console_handler)
     return logger
+
+def set_filters(raw):
+
+    raw.filter(l_freq=0.05, h_freq=None, picks=cfg.trsens_ch, verbose='error')
+    raw.filter(l_freq=5.0, h_freq=None, picks=cfg.emg_ch, verbose='error')
+    raw.filter(l_freq=0.5, h_freq=30, picks=cfg.ecg_ch, verbose='error')
+    raw.filter(l_freq=0.5, h_freq=35, picks=cfg.eog_ch, verbose='error')
+    raw.filter(l_freq=0.5, h_freq=35, picks=cfg.eeg_chs, verbose='error')
+
+    return raw
 
 def yasa_staging(raw):
     # Core function: based on raw recording from

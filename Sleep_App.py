@@ -85,21 +85,21 @@ class SleepApp:
         self.step_completed = {
             "load_raw_eeg": False,
             "create_show_report": False,
-            "save_show_edf": False
+            "save_show_bdf": False
         }
 
         # Порядок команд в меню (для удобства)
         self.menu_commands = [
             "load_raw_eeg",
             "create_show_report",
-            "save_show_edf"
+            "save_show_bdf"
         ]
 
         self.setup_menu()  # Выносим меню в отдельный метод
 
     def convert_sms(self, file, patient_name):
         """
-        Запускает ConverterStandalone.exe для конвертации .sm, .sms файла в .edf
+        Запускает ConverterStandalone.exe для конвертации .sm, .sms файла в .bdf
         """
         try:
             # Путь к ConverterStandalone.exe
@@ -109,10 +109,10 @@ class SleepApp:
                 return
             # Запускаем ConverterStandalone
             self.update_window_title(f"Открываю запись: {patient_name} / Opening EEG: {patient_name}")
-            subprocess.Popen([str(converter_path), '-s', '-f', 'edf', str(file)], shell=False)
+            subprocess.Popen([str(converter_path), '-s', '-f', 'bdf', str(file)], shell=False)
             fname = file.split('.')[0]
-            edf_file = fname + '.edf'
-            return edf_file
+            bdf_file = fname + '.bdf'
+            return bdf_file
 
         except Exception as e:  # только здесь e определена
             self.update_window_title(f"Не удалось запустить ConverterStandalone / Failed to run ConverterStandalone")
@@ -127,7 +127,7 @@ class SleepApp:
                 fg="purple",
                 font=("Arial", 11),
                 width=55,
-                command=self.load_raw_edf
+                command=self.load_raw_bdf
         )
         self.btn_load_raw_eeg.grid(row=0, column=0, padx=20, pady=(15, 10), sticky="ew")
 
@@ -145,17 +145,17 @@ class SleepApp:
         self.btn_create_show_report.grid(row=1, column=0, padx=20, pady=10, sticky="ew")
 
         # Кнопка 2: Сохранить и показать ЭЭГ со стадированием
-        self.btn_save_show_edf = tk.Button(
+        self.btn_save_show_bdf = tk.Button(
                 self.btn_frame,
                 text="Save and show EEG",
                 bg="white",
                 fg="purple",
                 font=("Arial", 11),
                 width=25,
-                command=self.save_show_edf,
+                command=self.save_show_bdf,
                 state="disabled"
         )
-        self.btn_save_show_edf.grid(row=2, column=0, padx=20, pady=(10, 15), sticky="ew")
+        self.btn_save_show_bdf.grid(row=2, column=0, padx=20, pady=(10, 15), sticky="ew")
 
     def create_output_directories(self):
         """Создаёт все необходимые выходные папки."""
@@ -177,7 +177,7 @@ class SleepApp:
     def create_show_report(self):
         """Запускает процесс создания отчёта через YASA в отдельном потоке с логированием."""
 
-        patient_name, patient_stem, edf_file = self.get_name_edf_file()
+        patient_name, patient_stem, bdf_file = self.get_name_bdf_file()
 
         if not patient_name:
             return
@@ -193,22 +193,22 @@ class SleepApp:
         font_path = self.font_path
 
         # 3. Препроцессинг
-        self.logger.info(f"[INFO] Начинаю препроцессинг: {edf_file}")
+        self.logger.info(f"[INFO] Начинаю препроцессинг: {bdf_file}")
         self.update_window_title(f"Начинаю препроцессинг: {patient_name} / Preprocessing initiated : {patient_name}" )
-        raw, chan, sf = preprocessing(fname_edf=str(edf_file))
+        raw, chan, sf = preprocessing(fname_edf=str(bdf_file))
         self.logger.info("[OK] Препроцессинг завершён")
         self.update_window_title(f"Препроцессинг завершён: {patient_name} / Preprocessing completed:{patient_name}")
 
         # 4. YASA: стадирование сна
         self.logger.info("[INFO] Запускаю YASA для стадирования сна")
         self.update_window_title(f"Cтадирование сна: {patient_name} / Sleep staging: {patient_name}")
-        hypno_pics = folder_pics_path / f"hypnogram_{patient_name}_yasa.png"
+        hypno_pics = folder_pics_path / f"hypnogram_{patient_stem}_yasa.png"
         hypno_predicted = yasa_staging(raw)
         self.logger.info("[OK] Стадирование YASA завершено")
         self.update_window_title(f"Стадирование сна завершено: {patient_name} / Sleep staging completed: {patient_name}")
 
         # Сохранение аннотаций YASA
-        yasa_annotations_path = folder_yasa/ f"{patient_name}_annotations_yasa.csv"
+        yasa_annotations_path = folder_yasa/ f"{patient_stem}_annotations_yasa.csv"
         pd.DataFrame({'Annotation': hypno_predicted}).to_csv(yasa_annotations_path, index=False)
         self.logger.info(f"[OK] Аннотации сна сохранены: {yasa_annotations_path}")
 
@@ -222,7 +222,7 @@ class SleepApp:
 
         self.logger.info("[INFO] Строю спектрограмму")
         self.update_window_title(f"Строю спектрограмму для пациента: {patient_name}")
-        spectro_pics = folder_pics_path / f"spectrogram_{patient_name}_yasa.png"
+        spectro_pics = folder_pics_path / f"spectrogram_{patient_stem}_yasa.png"
         plot_spectrogram(spectro_pics, chan, sf, hypno_predicted, raw)
         self.logger.info(f"[OK] Спектрограмма сохранена: {spectro_pics}")
         self.update_window_title(f"Спектрограмма сохранена: {patient_name} / Spectrogram saved: {patient_name}")
@@ -235,7 +235,7 @@ class SleepApp:
         self.update_window_title(f"Статистика сна рассчитана: {patient_name} / Sleep stat computed: {patient_name}")
 
         # Сохранение статистики в JSON
-        fname_stat = folder_statistics_path / f"{patient_name}_sleep_statistics.json"
+        fname_stat = folder_statistics_path / f"{patient_stem}_sleep_statistics.json"
         with open(fname_stat, 'w', encoding='utf-8') as f:
             json.dump(stat, f, ensure_ascii=False, indent=4)
         self.logger.info(f"[OK] Статистика cна сохранена: {fname_stat}")
@@ -243,12 +243,12 @@ class SleepApp:
 
         # 7. Создание PDF-отчёта
         self.logger.info("[INFO] Создаю PDF-отчёт")
-        self.update_window_title(f"Создаю PDF-отчёт: {patient_name} / Creating PDF-report: {patient_name}")
+        self.update_window_title(f"Создаю PDF-отчёт: {patient_stem} / Creating PDF-report: {patient_stem}")
 
-        create_sleep_statistics_pdf(patient_name, stat, folder_PDF, spectro_pics, font_path)
-        pdf_path = folder_PDF / f"{patient_name}_sleep_statistics.pdf"
+        create_sleep_statistics_pdf(patient_stem, stat, folder_PDF, spectro_pics, font_path)
+        pdf_path = folder_PDF / f"{patient_stem}_sleep_statistics.pdf"
         self.logger.info(f"[OK] PDF-отчёт создан: {pdf_path}")
-        self.update_window_title(f"PDF-отчёт создан: {patient_name} / PDF-report created: {patient_name}")
+        self.update_window_title(f"PDF-отчёт создан: {patient_stem} / PDF-report created: {patient_stem}")
         if pdf_path and os.path.exists(pdf_path):
             try:
                 subprocess.Popen([pdf_path], shell=True)
@@ -256,34 +256,34 @@ class SleepApp:
                 self.update_menu_state()
             except Exception as e:
                 self.update_window_title(
-                    f"Не удалось открыть PDF-отчет: {patient_name} / Failed to open PDF-report: {patient_name}")
+                    f"Не удалось открыть PDF-отчет: {patient_stem} / Failed to open PDF-report: {patient_stem}")
                 return
         else:
-            self.update_window_title(f"PDF-отчет не найден: {patient_name} / Failed to find PDF-report: {patient_name}")
+            self.update_window_title(f"PDF-отчет не найден: {patient_stem} / Failed to find PDF-report: {patient_stem}")
 
         self.root.after(5000, lambda: self.update_window_title(""))
 
         # --- РАЗБЛОКИРОВКА ТРЕТЬЕЙ КНОПКИ (только при успехе!) ---
-        self.btn_save_show_edf.config(state="normal")
+        self.btn_save_show_bdf.config(state="normal")
 
         return
 
-    def get_name_edf_file(self):
+    def get_name_bdf_file(self):
         """
-        Запрашивает имя пациента и путь к EDF‑файлу.
-        Возвращает: (patient_name: str, edf_file: Path) или (None, None) при ошибке.
+        Запрашивает имя пациента и путь к BDF‑файлу.
+        Возвращает: (patient_name: str, edf/bdf_file: Path) или (None, None) при ошибке.
         """
         # 1. Интерактивный выбор файла с записью пациента
-        edf_file = self.load_raw_edf()
+        bdf_file = self.load_raw_bdf()
 
-        patient_name = Path(edf_file).name
-        patient_stem = Path(edf_file).stem
+        patient_name = Path(bdf_file).name
+        patient_stem = Path(bdf_file).stem
 
-        self.update_window_title(f"Имя пациента: {patient_name} / Patient's name:  {patient_name}")
+        self.update_window_title(f"Имя пациента: {patient_stem} / Patient's name:  {patient_stem}")
 
-        return patient_name, patient_stem, edf_file
+        return patient_name, patient_stem, bdf_file
 
-    def load_raw_edf(self):
+    def load_raw_bdf(self):
         """
         Предлагает пользователю:
         1. Выбрать .edf‑файл для загрузки.
@@ -292,7 +292,7 @@ class SleepApp:
         возвращается исходный путь. Иначе — копирует и возвращает путь к копии.
         """
 
-        # Шаг 0: выбираем исходную папку (где лежит EDF)
+        # Шаг 0: выбираем исходную папку (где лежит EDF/BDF)
         initial_dir = str(self.last_data_dir) if self.last_data_dir else "/"
         src_dir = filedialog.askdirectory(
             initialdir=initial_dir,
@@ -319,6 +319,7 @@ class SleepApp:
 
         file_path = Path(file)
         patient_name = Path(file).name
+        patient_stem = Path(file).stem
 
         # 2. Проверяем, изменился ли пациент
         if self.last_patient_name != patient_name:
@@ -326,12 +327,12 @@ class SleepApp:
             self.step_completed = {
                 "load_raw_eeg": True,  # считаем, что загрузка выполнена (мы только что выбрали файл)
                 "create_show_report": False,
-                "save_show_edf": False
+                "save_show_bdf": False
             }
             self.update_menu_state()
             self.btn_create_show_report.config(state="disabled")
-            self.btn_save_show_edf.config(state="disabled")
-            self.logger.info(f"[INFO] Сменился пациент. Сброс состояния шагов. Новый пациент:  {patient_name}")
+            self.btn_save_show_bdf.config(state="disabled")
+            self.logger.info(f"[INFO] Сменился пациент. Сброс состояния шагов. Новый пациент:  {patient_stem}")
 
         # 2. Сохраняем имя текущего пациента как последнее
         self.last_patient_name = patient_name
@@ -345,11 +346,11 @@ class SleepApp:
             self.update_window_title(msg)
             return
 
-        # Конвертировать .sm в .edf
+        # Конвертировать .sm в .bdf
         if suffix in ('.sm', '.sms'):
-            edf_file = self.convert_sms(file, patient_name)
-            file_path = Path(edf_file)
-            self.update_window_title("Файл с расширением .edf создан / An .edf file created")
+            bdf_file = self.convert_sms(file, patient_name)
+            file_path = Path(bdf_file)
+            self.update_window_title("Файл с расширением .bdf создан / An .bdf file created")
 
         # Шаг 4: выбираем целевую папку
         dest_dir = filedialog.askdirectory(
@@ -365,7 +366,7 @@ class SleepApp:
         self.folder_pics_path = Path(dest_dir) / "pics"
         self.folder_statistics_path = Path(dest_dir) / "sleep_statistics"
         self.folder_PDF = Path(dest_dir) / "PDF"
-        self.folder_data_anns = Path(dest_dir) / "data_anns"
+        self.folder_data_anns = Path(dest_dir) / "data_annotations"
 
         # Создаём все папки при инициализации (если их нет)
         self.create_output_directories()
@@ -399,9 +400,9 @@ class SleepApp:
             self.update_window_title(f"Ошибка копирования: {e} / Copy error: {e}")
             return None
 
-    def save_show_edf(self):
+    def save_show_bdf(self):
         """
-        Загружает EDF‑файл и YASA‑аннотации, добавляет аннотации к сырым данным,
+        Загружает EDF/BDF‑файл и YASA‑аннотации, добавляет аннотации к сырым данным,
         сохраняет результат в указанную директорию и открывает в EDFbrowser.
         """
         folder_yasa = self.folder_yasa
@@ -410,33 +411,36 @@ class SleepApp:
         self.logger.info(f"[OK] Директория для записи ЭЭГ и меток сна создана/проверена: {folder_data_anns}")
 
         # Шаг 1: получаем имя пациента и путь к EDF
-        patient_name, patient_stem, eeg_file = self.get_name_edf_file()
+        patient_name, patient_stem, eeg_file = self.get_name_bdf_file()
         if not patient_name:
             self.update_window_title("Ошибка: не выбран пациент / No patient selected")
             return False
 
         # Формируем пути к файлам
-        anns_yasa_name = folder_yasa / f"{patient_name}_annotations_yasa.csv"
+        anns_yasa_name = folder_yasa / f"{patient_stem}_annotations_yasa.csv"
         raw_eeg_name = Path(eeg_file)  # Гарантируем Path‑объект
-
-        edf_file = str(raw_eeg_name)  # Для subprocess
 
         # Шаг 2: проверка существования файлов
         if not anns_yasa_name.exists():
             self.logger.error(f"Аннотации сна не найдены: {patient_name}")
-            self.update_window_title(f"Аннотации сна не найдены: {patient_name} / Sleep anns not found: {patient_name}")
+            self.update_window_title(f"Аннотации сна не найдены:{anns_yasa_name}  {patient_stem} / Sleep anns not found: {patient_stem}")
             return False
 
         self.logger.info(f"Файлы найдены для: {patient_name}. Начинаем обработку...")
-        self.update_window_title(f"Аннотации сна найдены: {patient_name} / Sleep anns found: {patient_name}")
+        self.update_window_title(f"Аннотации сна найдены: {patient_stem} / Sleep anns found: {patient_stem}")
 
         try:
             # Шаг 3: читаем данные
             anns_yasa = pd.read_csv(anns_yasa_name)
-            if raw_eeg_name.suffix.lower() == ".edf":
-                raw = mne.io.read_raw_edf(raw_eeg_name, preload=True)
-            if raw_eeg_name.suffix.lower() == ".bdf":
-                raw = mne.io.read_raw_bdf(raw_eeg_name, preload=True)
+
+            dir_path = raw_eeg_name.parent
+            base_name = raw_eeg_name.stem  # имя без расширения (brux1)
+
+            # Формируем новое имя: brux1_processed.edf
+            new_name = f"{base_name}_processed.edf"
+            out_path = dir_path / new_name
+            raw = mne.io.read_raw_edf(out_path, preload=True)
+
             # Шаг 4: формируем аннотации
             length = len(anns_yasa)
             onset = [i * 30 for i in range(length)]
@@ -456,7 +460,7 @@ class SleepApp:
             raw.set_annotations(annotations)
 
             # Шаг 5: сохраняем результат
-            output_filename = f"{patient_stem}_with_anns.edf"
+            output_filename = f"{patient_name}_with_annotations.edf"
             full_eeg_path = folder_data_anns / output_filename
 
             mne.export.export_raw(
@@ -466,7 +470,7 @@ class SleepApp:
                     overwrite=True
             )
             self.logger.info(f"[OK] ЭЭГ с аннотациями сна сохранена: {full_eeg_path}")
-            self.update_window_title(f"Аннотации сна сохранены: {patient_stem} / Sleep anns saved: {patient_stem}")
+            self.update_window_title(f"Аннотации сна сохранены: {patient_name} / Sleep anns saved: {patient_name}")
 
             # Шаг 6: открываем в EDFbrowser
             try:
@@ -477,7 +481,7 @@ class SleepApp:
 
                 self.update_window_title(f"Открываю запись: {patient_name} / Opening EEG: {patient_name}")
                 subprocess.Popen([str(edfbrowser_path), str(full_eeg_path)], shell=False)
-                self.step_completed["save_show_edf"] = True
+                self.step_completed["save_show_bdf"] = True
                 self.update_menu_state()  # хотя дальше шагов нет, для полноты
                 self.root.after(5000, lambda: self.update_window_title(""))
 
@@ -507,9 +511,9 @@ class SleepApp:
         self.menu.add_cascade(label="Menu", menu=self.data_menu)
 
         self.data_menu.add_command(label="About", command=self.show_about)
-        self.data_menu.add_command(label="Load EEG", command=self.load_raw_edf)
+        self.data_menu.add_command(label="Load EEG", command=self.load_raw_bdf)
         self.data_menu.add_command(label="Create and show PDF-report ", command=self.create_show_report)
-        self.data_menu.add_command(label="Save and show EEG", command=self.save_show_edf)
+        self.data_menu.add_command(label="Save and show EEG", command=self.save_show_bdf)
         self.data_menu.add_command(label="Exit", command=self.exit_app)
 
         # Первоначальная настройка состояния меню
